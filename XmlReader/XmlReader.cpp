@@ -32,7 +32,7 @@ namespace Xml
         deleteTree(&tree);
     }
 
-    void XmlReader::parseTree(XmlNode **node, std::fstream &stream)
+    void XmlReader::parseTree(XmlNodeDoublePtr node, std::fstream &stream)
     {
         if (node)
         {
@@ -48,7 +48,7 @@ namespace Xml
                         return std::string("");
                 };
 
-                auto parseNodeName = [regex_search](XmlNode *node, const std::string &str)
+                auto parseNodeName = [regex_search](XmlNodePtr node, const std::string &str)
                 {
                     if (node != nullptr)
                     {
@@ -61,7 +61,7 @@ namespace Xml
                     }
                 };
 
-                auto parseNodeParameter = [regex_search](XmlNode *node, const std::string &str)
+                auto parseNodeParameter = [regex_search](XmlNodePtr node, const std::string &str)
                 {
                     if (node != nullptr)
                     {
@@ -82,7 +82,7 @@ namespace Xml
                     }
                 };
 
-                auto parseNodeValue = [regex_search](XmlNode *node, const std::string &str)
+                auto parseNodeValue = [regex_search](XmlNodePtr node, const std::string &str)
                 {
                     if (node != nullptr)
                     {
@@ -163,7 +163,7 @@ namespace Xml
         else return;
     }
 
-    void XmlReader::deleteTree(XmlNode **node)
+    void XmlReader::deleteTree(XmlNodeDoublePtr node)
     {
         if (node)
         {
@@ -181,44 +181,67 @@ namespace Xml
         }
     }
 
-    XmlNode *XmlReader::findNodeByName(const std::string &name) const
+    XmlNodePtr XmlReader::getTree() const
     {
-        if (tree != nullptr)
+        return tree;
+    }
+
+    XmlNodeConstPtr XmlNode::findNode(const std::string &name) const
+    {
+        std::function<XmlNodeConstPtr(XmlNodeConstPtr, const std::string&)> seekNode;
+
+        seekNode = [&seekNode](XmlNodeConstPtr node, const std::string &name) -> XmlNodeConstPtr
         {
-            std::function<XmlNode**(XmlNode**, const std::string&)> seekNode;
-
-            seekNode = [&seekNode](XmlNode **node, const std::string &name) -> XmlNode**
+            if (node != nullptr)
             {
-                if (node != nullptr)
+                if (node->name == name)
+                    return node;
+                else
                 {
-                    if (*node != nullptr)
+                    const XmlNode *lookUpNode = nullptr;
+
+                    if (node->next != nullptr)
+                        lookUpNode = seekNode(node->next, name);
+
+                    if (lookUpNode == nullptr)
                     {
-                        if ((*node)->name == name)
-                            return node;
-                        else
-                        {
-                            XmlNode **lookUpNode = nullptr;
-
-                            if ((*node)->next != nullptr)
-                                lookUpNode = seekNode(&(*node)->next, name);
-
-                            if (lookUpNode == nullptr)
-                            {
-                                if ((*node)->children != nullptr)
-                                    return seekNode(&(*node)->children, name);
-                            }
-                            else
-                                return lookUpNode;
-                        }
+                        if (node->children != nullptr)
+                            return seekNode(node->children, name);
                     }
-                    else return nullptr;
+                    else
+                        return lookUpNode;
                 }
-                else return nullptr;
-            };
+            }
+            else return nullptr;
+        };
+        return seekNode(this, name);
+    }
 
-            return *seekNode(&tree, name);
-        }
-        else
-            return nullptr;
+    XmlNodeList XmlNode::findChildren(const std::string &name) const
+    {
+        auto list = XmlNodeList();
+
+        std::function<void(XmlNodeList&, XmlNodeConstPtr, const std::string&)> seekNodes;
+
+        seekNodes = [&seekNodes](XmlNodeList &list, XmlNodeConstPtr node, const std::string &name)
+        {
+            if (node)
+            {
+                if (node->name == name)
+                {
+                    list.push_back(node);
+                }
+
+                if (node->next != nullptr)
+                    seekNodes(list, node->next, name);
+
+                if (node->children != nullptr)
+                    seekNodes(list, node->children, name);
+            }
+        };
+
+        seekNodes(list, this->children, name);
+
+        return list;
     }
 }
