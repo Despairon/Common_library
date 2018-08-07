@@ -5,9 +5,9 @@
 */
 
 #include <mutex>
+#include <thread>
 #include <queue>
 #include <map>
-#include <windows.h>
 
 namespace EventManager
 {
@@ -15,67 +15,48 @@ namespace EventManager
     class EventController
     {
     private:
-        bool                                            initialized;
-        HANDLE                                          threadHandle;
+        bool                                            running;
+        std::thread                                     thread;
         std::mutex                                      mutex;
         std::queue<std::pair<EventType, EventDataType>> eventsQueue;
         std::map<EventType, EventHandlerType>           eventsMap;
 
-        static DWORD WINAPI eventLoop(LPVOID lpParam)                                       // event loop thread method
+        static void eventLoop(EventController &controller)                                       // event loop thread method
         {
-            if (lpParam)
+            while (controller.running)
             {
-                auto controller = static_cast<EventController*>(lpParam);
-
-                while (true)
+                if (!controller.eventsQueue.empty())
                 {
-                    if (controller->isInitialized())
+                    controller.mutex.lock();
+
+                    auto eventToHandle = controller.eventsQueue.front();
+
+                    controller.eventsQueue.pop();
+
+                    controller.mutex.unlock();
+
+                    if (controller.eventsMap.find(eventToHandle.first) != controller.eventsMap.end())
                     {
-                        if (!controller->eventsQueue.empty())
+                        if (controller.eventsMap.at(eventToHandle.first) != 0)
                         {
-                            controller->mutex.lock();
-
-                            auto eventToHandle = controller->eventsQueue.front();
-
-                            controller->eventsQueue.pop();
-
-                            controller->mutex.unlock();
-
-                            if (controller->eventsMap.find(eventToHandle.first) != controller->eventsMap.end())
-                            {
-                                if (controller->eventsMap.at(eventToHandle.first) != 0)
-                                {
-                                    controller->eventsMap.at(eventToHandle.first)(eventToHandle.second);
-                                }
-                            }
+                            controller.eventsMap.at(eventToHandle.first)(eventToHandle.second);
                         }
                     }
                 }
             }
-
-            return EXIT_SUCCESS;
         }
 
     public:
         explicit EventController()                                                          // constructor
-        { 
-            initialized = false;
-
-            threadHandle = CreateThread(NULL, 0, eventLoop, this, NULL, NULL);
-
-            if (threadHandle)
-                initialized = true;
-            else
-                throw std::exception("Unknown event controller thread creation error");
+        {
+            running = true;
+            thread = std::thread(eventLoop, std::ref(*this));
         }
 
         ~EventController()                                                                  // destructor
         { 
-            if (threadHandle)
-            {
-                TerminateThread(threadHandle, EXIT_SUCCESS);
-                CloseHandle(threadHandle);
-            }
+            running = false;
+            thread.join();
         }
 
         void registerEvent(const EventType &event, EventHandlerType eventHandler)           // registers event in the event loop
@@ -96,11 +77,5 @@ namespace EventManager
 
             mutex.unlock();
         }
-
-        const bool &isInitialized() const                                                   // 'initialized' parameter getter
-        {
-            return initialized;
-        }
     };
-
 }
