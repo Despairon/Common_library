@@ -1,7 +1,7 @@
 #pragma once
 
 /*
-* This file contains SoC Flasher Timer declarations
+* This file contains Timer declarations
 */
 
 #include <functional>
@@ -19,7 +19,7 @@ namespace Timer
         int                  timeout;                       // timer timeout in milliseconds
         TimerTimeoutCallback callback;                      // timer callback
         std::thread          thread;                        // timer thread
-        std::mutex           mutex;                         // timer mutes
+        std::mutex           mutex;                         // timer mutex
 
         static void timerTick(Timer&);                      // timer thread method
     public:

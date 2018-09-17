@@ -1,5 +1,5 @@
 /*
-* This file contains SoC Flasher Timer definitions
+* This file contains Timer definitions
 */
 
 #include <chrono>

@@ -11,9 +11,7 @@ namespace Logging
 {
     Logger::Logger(const std::string &filePath)
     {
-#ifdef LOGGING_ENABLED // TODO: remove when released
         fileStream = std::ofstream(filePath, std::ios::out | std::ios::trunc);
-#endif
     }
 
     Logger::Logger()
@@ -27,9 +25,7 @@ namespace Logging
 
         auto filePath = "Log_" + timeStr + ".log";
 
-#ifdef LOGGING_ENABLED // TODO: remove when released
         fileStream = std::ofstream(filePath, std::ios::out | std::ios::trunc);
-#endif
     }
 
     Logger::~Logger() { }
@@ -38,9 +34,7 @@ namespace Logging
     {
         if (fileStream.good() && fileStream.is_open())
         {
-#ifdef LOGGING_ENABLED // TODO: remove when released
             fileStream << trace;
-#endif
         }
 
         return *this;

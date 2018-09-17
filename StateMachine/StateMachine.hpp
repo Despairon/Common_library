@@ -55,7 +55,7 @@ namespace FSM
                     FSM_DEBUG(debugDevice) << "Transition from " << stateToString(_state).c_str()
                         << " to " << stateToString(transitions.at(_state).at(event).first).c_str()
                         << " by event " << eventToString(event).c_str()
-                        << " successful!";
+                        << " successful!\n";
 
                     _state = transitions.at(_state).at(event).first;
                 }
@@ -63,7 +63,7 @@ namespace FSM
                 {
                     FSM_DEBUG(debugDevice) << "Transition from " << stateToString(_state).c_str()
                         << " by event " << eventToString(event).c_str()
-                        << " not found!";
+                        << " not found!\n";
                 }
             }
             else

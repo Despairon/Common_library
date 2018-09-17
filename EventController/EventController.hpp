@@ -8,18 +8,22 @@
 #include <thread>
 #include <queue>
 #include <map>
+#include <functional>
 
 namespace EventManager
 {
-    template<typename EventType, typename EventDataType, typename EventHandlerType>
+    template<typename EventType, typename EventDataType>
     class EventController
     {
+        using EventHandlerType = std::function<void(EventDataType)>;
+        using EventsQueue      = std::queue<std::pair<EventType, EventDataType>>;
+        using EventsMap        = std::map<EventType, EventHandlerType>;
     private:
-        bool                                            running;
-        std::thread                                     thread;
-        std::mutex                                      mutex;
-        std::queue<std::pair<EventType, EventDataType>> eventsQueue;
-        std::map<EventType, EventHandlerType>           eventsMap;
+        bool        running;
+        std::thread thread;
+        std::mutex  mutex;
+        EventsQueue eventsQueue;
+        EventsMap   eventsMap;
 
         static void eventLoop(EventController &controller)                                       // event loop thread method
         {
@@ -54,9 +58,14 @@ namespace EventManager
         }
 
         ~EventController()                                                                  // destructor
-        { 
-            running = false;
-            thread.join();
+        {
+            if (running)
+            {
+                running = false;
+
+                if (thread.joinable())
+                    thread.join();
+            }
         }
 
         void registerEvent(const EventType &event, EventHandlerType eventHandler)           // registers event in the event loop
