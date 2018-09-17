@@ -24,7 +24,7 @@ namespace Timer
 
     void Timer::timerTick(Timer &timer)
     {
-        static auto startTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+        auto startTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
         auto currTime = startTime;
 
         while (timer.running)
