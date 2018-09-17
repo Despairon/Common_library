@@ -35,6 +35,7 @@ namespace Logging
         if (fileStream.good() && fileStream.is_open())
         {
             fileStream << trace;
+            fileStream.flush();
         }
 
         return *this;
