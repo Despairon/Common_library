@@ -9,17 +9,21 @@ using namespace std::chrono;
 
 namespace Timer
 {
-    Timer::Timer(const int &timeout, TimerTimeoutCallback callback)
+    Timer::Timer(const std::string &name, const int &timeout, TimerTimeoutCallback callback) :
+        running(false),
+        name(name),
+        timeout(timeout),
+        callback(callback)
     {
-        running = false;
-        this->timeout  = timeout;
-        this->callback = callback;
     }
 
     Timer::~Timer()
     {
-        running = false;
-        thread.join();
+        if (thread.joinable())
+        {
+            running = false;
+            thread.join();
+        }
     }
 
     void Timer::timerTick(Timer &timer)
@@ -50,11 +54,11 @@ namespace Timer
     {
         mutex.lock();
         {
-            if (!running)
-            {
-                running = true;
-                thread = std::thread(timerTick, std::ref(*this));
-            }
+            if (thread.joinable())
+                thread.join();
+
+            running = true;
+            thread = std::thread(timerTick, std::ref(*this));
         }
         mutex.unlock();
     }
@@ -72,9 +76,14 @@ namespace Timer
         mutex.unlock();
     }
 
-    bool Timer::isRunning() const
+    const bool &Timer::isRunning() const
     {
         return running;
+    }
+
+    const std::string &Timer::getName() const
+    {
+        return name;
     }
 
     const int &Timer::getTimeout() const

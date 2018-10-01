@@ -20,16 +20,20 @@ namespace Timer
         TimerTimeoutCallback callback;                      // timer callback
         std::thread          thread;                        // timer thread
         std::mutex           mutex;                         // timer mutex
+        std::string          name;                          // timer name to identify it
 
         static void timerTick(Timer&);                      // timer thread method
     public:
-        explicit Timer(const int&, TimerTimeoutCallback);   // constructor
+        explicit Timer(const std::string&, 
+                       const int&, 
+                       TimerTimeoutCallback);               // constructor
         ~Timer();                                           // destructor
 
         void start();                                       // start timer method
         void stop();                                        // stop timer method
         
-        bool isRunning() const;                             // get is timer running parameter
+        const bool &isRunning() const;                      // get is timer running parameter
+        const std::string &getName() const;                 // get timer name
         
         const int &getTimeout() const;                      // get 'timeout' parameter      
         void setTimeout(const int&);                        // set 'timeout' parameter
