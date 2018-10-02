@@ -23,6 +23,8 @@ namespace Timer
         void startTimer(const std::string&);
         void stopTimer(const std::string&);
         void changeTimerTimeout(const std::string&, const int&);
+        void stopAllTimers();
+        
         const bool &isTimerActive(const std::string&);
 
     };

@@ -121,6 +121,17 @@ namespace Timer
         }
     }
 
+    void TimerManager::stopAllTimers()
+    {
+        if (!timerList.empty())
+        {
+            for (auto timer = timerList.begin(); timer != timerList.end(); timer++)
+            {
+                stopTimer((*timer)->getName());
+            }
+        }
+    }
+
     const bool &TimerManager::isTimerActive(const std::string &timerName)
     {
         auto timer = findTimer(timerName);
