@@ -169,6 +169,7 @@ namespace HttpMessage_n
         VARY,
         WWW_AUTHENTICATE,
         X_FRAME_OPTIONS,
+        X_PAD
     };
 
     class HttpMessage

@@ -169,7 +169,8 @@ namespace HttpMessage_n
         {HttpHeader::TRANSFER_ENCODING,                   std::string("Transfer-Encoding")},
         {HttpHeader::VARY,                                std::string("Vary")},
         {HttpHeader::WWW_AUTHENTICATE,                    std::string("WWW-Authenticate")},
-        {HttpHeader::X_FRAME_OPTIONS,                     std::string("X-Frame-Options")}
+        {HttpHeader::X_FRAME_OPTIONS,                     std::string("X-Frame-Options")},
+        {HttpHeader::X_PAD,                               std::string("X-Pad")}
     };
 
     //***************************************
@@ -187,7 +188,7 @@ namespace HttpMessage_n
                 auto reqResLineEndInd = rawText.find(Defines::ENDL);
                 auto reqResLine = rawText.substr(0, reqResLineEndInd);
 
-                auto iss = std::istringstream(rawText);
+                auto iss = std::istringstream(reqResLine);
                 auto reqResFields = std::vector<std::string>(std::istream_iterator<std::string>{ iss }, std::istream_iterator<std::string>());
 
                 if (!reqResFields.empty())
@@ -196,7 +197,7 @@ namespace HttpMessage_n
 
                     auto httpMethodFromMap = std::find_if(httpMethodsMap.begin(), httpMethodsMap.end(), [&firstReqResField](const auto &pair) -> bool { return pair.second == firstReqResField; });
 
-                    if (httpMethodFromMap != httpMethodsMap.end())
+                    if (httpMethodFromMap != httpMethodsMap.end() && (reqResFields.size() > 2))
                     {
                         // if first word is a known http method,
                         // this is a request type message
@@ -208,7 +209,7 @@ namespace HttpMessage_n
                     {
                         auto httpVersionFromMap = std::find_if(httpVersionsMap.begin(), httpVersionsMap.end(), [&firstReqResField](const auto &pair) -> bool { return pair.second == firstReqResField; });
 
-                        if (httpVersionFromMap != httpVersionsMap.end())
+                        if ( (httpVersionFromMap != httpVersionsMap.end()) && (reqResFields.size() > 2) )
                         {
                             // if first word is a known http version,
                             // this is a response type message
@@ -227,21 +228,21 @@ namespace HttpMessage_n
 
                 auto endlInd = rawText.find(Defines::ENDL);
 
-                if (endlInd > 0)
+                if (endlInd >= 0)
                     rawText.erase(0, endlInd + 1);
 
                 auto headerEndInd = rawText.find(std::string(Defines::ENDL) + std::string(Defines::ENDL));  // search for the end of the header which is two endlines (\r\n)
 
-                if (headerEndInd > 0)
+                if (headerEndInd >= 0)
                 {
-                    _header = rawText.substr(0, headerEndInd - 1);
+                    _header = rawText.substr(0, headerEndInd);
                     rawText.erase(0, headerEndInd + 3);
 
                     auto bodyEndInd = rawText.find(std::string(Defines::ENDL) + std::string(Defines::ENDL)); // search for the end of the body
 
-                    if (bodyEndInd > 0)
+                    if (bodyEndInd >= 0)
                     {
-                        _body = rawText.substr(0, bodyEndInd - 1);
+                        _body = rawText.substr(3, bodyEndInd);
                         _isValid = true;
                     }
                 }
@@ -389,19 +390,19 @@ namespace HttpMessage_n
                 auto hdrStr = _header;
                 auto hdrInd = hdrStr.find(headerStr);
                 
-                if (hdrInd > 0)
+                if (hdrInd >= 0)
                 {
                     hdrStr.erase(0, hdrInd);
                     hdrInd = hdrStr.find(Defines::ENDL);
 
-                    if (hdrInd > 0)
+                    if (hdrInd >= 0)
                     {
                         auto delim_ind = hdrStr.find(':');
                         auto endl_ind  = hdrStr.find(Defines::ENDL);
 
-                        if ((delim_ind > 0) && (endl_ind > 0))
+                        if ((delim_ind >= 0) && (endl_ind >= 0))
                         {
-                            hdrStr = hdrStr.substr(delim_ind, endl_ind - delim_ind);
+                            hdrStr = hdrStr.substr(delim_ind + 2, endl_ind - delim_ind - 2);
 
                             return hdrStr;
                         }
@@ -438,7 +439,7 @@ namespace HttpMessage_n
         _version = "";
         _status  = "";
 
-        _method = httpMethodsMap.at(method);
+        _method  = httpMethodsMap.at(method);
         _request = request;
         _version = httpVersionsMap.at(version);
 
@@ -455,13 +456,13 @@ namespace HttpMessage_n
 
     HttpMessage &HttpMessage::setResponseLine(const HttpVersion &version, const HttpStatus &status)
     {
-        _method = "";
+        _method  = "";
         _request = "";
         _version = "";
-        _status = "";
+        _status  = "";
 
         _version = httpVersionsMap.at(version);
-        _status = httpStatusesMap.at(status);
+        _status  = httpStatusesMap.at(status);
 
         auto __version = _version;
         auto __status  = _status;
