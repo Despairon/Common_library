@@ -1,8 +1,6 @@
 #include "HttpMessage.h"
 
-#include <sstream>
 #include <vector>
-#include <iterator>
 #include <algorithm>
 
 namespace HttpMessage_n
@@ -183,79 +181,84 @@ namespace HttpMessage_n
 
         if (rawText != std::string())
         {
-            try
+            auto reqResLineEndInd = rawText.find(Defines::ENDL);
+            auto reqResLine = rawText.substr(0, reqResLineEndInd);
+            auto reqResFields = std::vector<std::string>();
+            
+            auto currStr = std::string("");
+            for(auto chr : reqResLine)
             {
-                auto reqResLineEndInd = rawText.find(Defines::ENDL);
-                auto reqResLine = rawText.substr(0, reqResLineEndInd);
-
-                auto iss = std::istringstream(reqResLine);
-                auto reqResFields = std::vector<std::string>(std::istream_iterator<std::string>{ iss }, std::istream_iterator<std::string>());
-
-                if (!reqResFields.empty())
+                if (chr != ' ')
                 {
-                    auto firstReqResField = reqResFields.at(0);
+                    currStr += chr;
+                    continue;
+                }
+                else
+                {
+                    reqResFields.push_back(currStr);
+                    currStr = std::string("");
+                }
+            }
+            
 
-                    auto httpMethodFromMap = std::find_if(httpMethodsMap.begin(), httpMethodsMap.end(), [&firstReqResField](const auto &pair) -> bool { return pair.second == firstReqResField; });
+            if (!reqResFields.empty())
+            {
+                auto firstReqResField = reqResFields.at(0);
 
-                    if (httpMethodFromMap != httpMethodsMap.end() && (reqResFields.size() > 2))
+                auto httpMethodFromMap = std::find_if(httpMethodsMap.begin(), httpMethodsMap.end(), [&firstReqResField](const std::pair<HttpMethod, std::string> &pair) -> bool { return pair.second == firstReqResField; });
+
+                if (httpMethodFromMap != httpMethodsMap.end() && (reqResFields.size() > 2))
+                {
+                    // if first word is a known http method,
+                    // this is a request type message
+                    _method  = reqResFields.at(0);
+                    _request = reqResFields.at(1);
+                    _version = reqResFields.at(2);
+                }
+                else 
+                {
+                    auto httpVersionFromMap = std::find_if(httpVersionsMap.begin(), httpVersionsMap.end(), [&firstReqResField](const std::pair<HttpVersion, std::string> &pair) -> bool { return pair.second == firstReqResField; });
+
+                    if ( (httpVersionFromMap != httpVersionsMap.end()) && (reqResFields.size() > 2) )
                     {
-                        // if first word is a known http method,
-                        // this is a request type message
-                        _method  = reqResFields.at(0);
-                        _request = reqResFields.at(1);
-                        _version = reqResFields.at(2);
+                        // if first word is a known http version,
+                        // this is a response type message
+                        _version = firstReqResField;
+                        reqResFields.erase(reqResFields.begin());
+                        
+                        _status = "";
+                        for (auto field : reqResFields)
+                            _status += field + ' ';
+                        _status.pop_back(); // remove trailing ' ' symbol (space)
                     }
                     else 
-                    {
-                        auto httpVersionFromMap = std::find_if(httpVersionsMap.begin(), httpVersionsMap.end(), [&firstReqResField](const auto &pair) -> bool { return pair.second == firstReqResField; });
-
-                        if ( (httpVersionFromMap != httpVersionsMap.end()) && (reqResFields.size() > 2) )
-                        {
-                            // if first word is a known http version,
-                            // this is a response type message
-                            _version = firstReqResField;
-                            reqResFields.erase(reqResFields.begin());
-                            
-                            _status = "";
-                            for (auto field : reqResFields)
-                                _status += field + ' ';
-                            _status.pop_back(); // remove trailing ' ' symbol (space)
-                        }
-                        else 
-                            throw std::exception("invalid HTTP message format");
-                    }
+                        return; // TODO: debug: "invalid HTTP message format";
                 }
-
-                auto endlInd = rawText.find(Defines::ENDL);
-
-                if (endlInd >= 0)
-                    rawText.erase(0, endlInd + 1);
-
-                auto headerEndInd = rawText.find(std::string(Defines::ENDL) + std::string(Defines::ENDL));  // search for the end of the header which is two endlines (\r\n)
-
-                if (headerEndInd >= 0)
-                {
-                    _header = rawText.substr(0, headerEndInd);
-                    rawText.erase(0, headerEndInd + 3);
-
-                    auto bodyEndInd = rawText.find(std::string(Defines::ENDL) + std::string(Defines::ENDL)); // search for the end of the body
-
-                    if (bodyEndInd >= 0)
-                    {
-                        _body = rawText.substr(3, bodyEndInd);
-                        _isValid = true;
-                    }
-                }
-
-                if (!_isValid)
-                    throw std::exception("invalid HTTP message format");
             }
-            catch (std::exception &e)
+
+            auto endlInd = rawText.find(Defines::ENDL);
+
+            if (endlInd >= 0)
+                rawText.erase(0, endlInd + 1);
+
+            auto headerEndInd = rawText.find(std::string(Defines::ENDL) + std::string(Defines::ENDL));  // search for the end of the header which is two endlines (\r\n)
+
+            if (headerEndInd >= 0)
             {
-                (void)e;
+                _header = rawText.substr(0, headerEndInd);
+                rawText.erase(0, headerEndInd + 3);
 
-                clear();
+                auto bodyEndInd = rawText.find(std::string(Defines::ENDL) + std::string(Defines::ENDL)); // search for the end of the body
+
+                if (bodyEndInd >= 0)
+                {
+                    _body = rawText.substr(3, bodyEndInd);
+                    _isValid = true;
+                }
             }
+
+            if (!_isValid)
+                return; // TODO: debug: "invalid HTTP message format";
         }
         else
         {
@@ -342,7 +345,7 @@ namespace HttpMessage_n
     {
         auto __method = _method;
 
-        auto httpMethodFromMap = std::find_if(httpMethodsMap.begin(), httpMethodsMap.end(), [&__method](const auto &pair) -> bool { return pair.second == __method; });
+        auto httpMethodFromMap = std::find_if(httpMethodsMap.begin(), httpMethodsMap.end(), [&__method](const std::pair<HttpMethod, std::string> &pair) -> bool { return pair.second == __method; });
 
         if (httpMethodFromMap != httpMethodsMap.end())
             return httpMethodFromMap->first;
@@ -359,7 +362,7 @@ namespace HttpMessage_n
     {
         auto __version = _version;
 
-        auto httpVersionFromMap = std::find_if(httpVersionsMap.begin(), httpVersionsMap.end(), [&__version](const auto &pair) -> bool { return pair.second == __version; });
+        auto httpVersionFromMap = std::find_if(httpVersionsMap.begin(), httpVersionsMap.end(), [&__version](const std::pair<HttpVersion, std::string> &pair) -> bool { return pair.second == __version; });
 
         if (httpVersionFromMap != httpVersionsMap.end())
             return httpVersionFromMap->first;
@@ -371,7 +374,7 @@ namespace HttpMessage_n
     {
         auto __status = _status;
 
-        auto httpStatusFromMap = std::find_if(httpStatusesMap.begin(), httpStatusesMap.end(), [&__status](const auto &pair) -> bool { return pair.second == __status; });
+        auto httpStatusFromMap = std::find_if(httpStatusesMap.begin(), httpStatusesMap.end(), [&__status](const std::pair<HttpStatus, std::string> &pair) -> bool { return pair.second == __status; });
 
         if (httpStatusFromMap != httpStatusesMap.end())
             return httpStatusFromMap->first;
@@ -446,8 +449,8 @@ namespace HttpMessage_n
         auto __method  = _method;
         auto __version = _version;
 
-        auto httpMethodFromMap  = std::find_if(httpMethodsMap.begin(), httpMethodsMap.end(), [&__method](const auto &pair) -> bool { return pair.second == __method; });
-        auto httpVersionFromMap = std::find_if(httpVersionsMap.begin(), httpVersionsMap.end(), [&__version](const auto &pair) -> bool { return pair.second == __version; });
+        auto httpMethodFromMap  = std::find_if(httpMethodsMap.begin(), httpMethodsMap.end(), [&__method](const std::pair<HttpMethod, std::string> &pair) -> bool { return pair.second == __method; });
+        auto httpVersionFromMap = std::find_if(httpVersionsMap.begin(), httpVersionsMap.end(), [&__version](const std::pair<HttpVersion, std::string> &pair) -> bool { return pair.second == __version; });
 
         _isValid = (httpMethodFromMap != httpMethodsMap.end()) && (httpVersionFromMap != httpVersionsMap.end());
 
@@ -467,8 +470,8 @@ namespace HttpMessage_n
         auto __version = _version;
         auto __status  = _status;
 
-        auto httpVersionFromMap = std::find_if(httpVersionsMap.begin(), httpVersionsMap.end(), [&__version](const auto &pair) -> bool { return pair.second == __version; });
-        auto httpStatusFromMap = std::find_if(httpStatusesMap.begin(), httpStatusesMap.end(), [&__status](const auto &pair) -> bool { return pair.second == __status; });
+        auto httpVersionFromMap = std::find_if(httpVersionsMap.begin(), httpVersionsMap.end(), [&__version](const std::pair<HttpVersion, std::string> &pair) -> bool { return pair.second == __version; });
+        auto httpStatusFromMap = std::find_if(httpStatusesMap.begin(), httpStatusesMap.end(), [&__status](const std::pair<HttpStatus, std::string> &pair) -> bool { return pair.second == __status; });
 
         _isValid = (httpStatusFromMap != httpStatusesMap.end()) && (httpVersionFromMap != httpVersionsMap.end());
 
