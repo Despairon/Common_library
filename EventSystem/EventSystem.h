@@ -5,29 +5,32 @@
 #include <list>
 
 #include "EventSubscriber.h"
+#include "Task.h"
 
 namespace EventSystem_n
 {
-    class EventSystem
+    using namespace TaskManager_n;
+
+    class EventSystem : public Task
     {
         using SubscribersList  = std::list<EventSubscriber*>;
-        using Subscriptions    = std::map<EventID, SubscribersList>;
+        using Subscriptions    = std::map<EventId, SubscribersList>;
         using EventQueue       = std::queue<Event>;
 
     private:
         Subscriptions subscriptions;
         EventQueue    eventQueue;
 
-        EventSystem() = default;
-        EventSystem operator=(const EventSystem&) = delete;
-        EventSystem(const EventSystem&) = delete;
     public:
-        static EventSystem &getInstance();
+        EventSystem();
+        ~EventSystem();
 
-        void subscribe(const EventID&, EventSubscriber*);
-        void unsubscribe(const EventID&, EventSubscriber*);
+        void subscribe(const EventId&, EventSubscriber*);
+        void unsubscribe(const EventId&, EventSubscriber*);
         void sendEvent(const Event&);
 
-        void go();
+        void init() override;
+        void go() override;
+        void terminate() override;
     };
 }

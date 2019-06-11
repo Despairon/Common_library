@@ -28,7 +28,7 @@ namespace EventSystem_n
         }
     }
 
-    Event::Event(const EventID &id, void *data, const size_t &size)
+    Event::Event(const EventId &id, void *data, const size_t &size)
     {
         this->id = id;
 
@@ -73,7 +73,7 @@ namespace EventSystem_n
         return *this;
     }
 
-    const EventID &Event::getId() const
+    const EventId &Event::getId() const
     {
         return id;
     }
