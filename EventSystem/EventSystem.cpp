@@ -62,6 +62,7 @@ namespace EventSystem_n
 
     void EventSystem::terminate()
     {
-        // do nothing for now
+        if (!subscriptions.empty())
+            subscriptions.clear();
     }
 }

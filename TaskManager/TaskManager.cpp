@@ -41,7 +41,7 @@ namespace TaskManager_n
 
     TaskId TaskManager::scheduleTask(Task *task, const Priority &priority)
     {
-        if ((task != nullptr) && !tasks.empty())
+        if (task != nullptr)
         {
             if (std::find(tasks.begin(), tasks.end(), task) == tasks.end())
             {
