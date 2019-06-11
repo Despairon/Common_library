@@ -2,14 +2,17 @@
 
 namespace EventSystem_n
 {
-    EventSystem &EventSystem::getInstance()
+    EventSystem::EventSystem()
     {
-        static EventSystem instance;
-
-        return instance;
+        init();
     }
 
-    void EventSystem::subscribe(const EventID &event, EventSubscriber *subscriber)
+    EventSystem::~EventSystem()
+    {
+        terminate();
+    }
+
+    void EventSystem::subscribe(const EventId &event, EventSubscriber *subscriber)
     {
         if (subscriber != nullptr)
         {
@@ -21,7 +24,7 @@ namespace EventSystem_n
         }
     }
 
-    void EventSystem::unsubscribe(const EventID &event, EventSubscriber *subscriber)
+    void EventSystem::unsubscribe(const EventId &event, EventSubscriber *subscriber)
     {
         if (subscriber != nullptr)
         {
@@ -35,6 +38,11 @@ namespace EventSystem_n
         eventQueue.push(event);
     }
 
+    void EventSystem::init()
+    {
+        // do nothing for now
+    }
+
     void EventSystem::go()
     {
         if (!eventQueue.empty())
@@ -45,10 +53,15 @@ namespace EventSystem_n
             {
                 for (auto subscriber : subscriptions[event.getId()])
                     if (subscriber != nullptr)
-                        subscriber->onEvent(event);
+                        subscriber->onEvent(this, event);
             }
 
             eventQueue.pop();
         }
+    }
+
+    void EventSystem::terminate()
+    {
+        // do nothing for now
     }
 }
