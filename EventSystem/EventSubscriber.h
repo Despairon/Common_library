@@ -5,6 +5,7 @@
 namespace EventSystem_n
 {
     class EventSystem;
+
     class EventSubscriber
     {
     public:

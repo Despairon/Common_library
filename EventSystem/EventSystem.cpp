@@ -12,6 +12,13 @@ namespace EventSystem_n
         terminate();
     }
 
+    EventId EventSystem::createEvent() const
+    {
+        static EventId eventId = 0;
+
+        return eventId++;
+    }
+
     void EventSystem::subscribe(const EventId &event, EventSubscriber *subscriber)
     {
         if (subscriber != nullptr)

@@ -25,6 +25,7 @@ namespace EventSystem_n
         EventSystem();
         ~EventSystem();
 
+        EventId createEvent() const;
         void subscribe(const EventId&, EventSubscriber*);
         void unsubscribe(const EventId&, EventSubscriber*);
         void sendEvent(const Event&);
