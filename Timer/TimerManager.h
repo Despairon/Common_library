@@ -41,5 +41,6 @@ namespace TimerManager_n
         void startTimer(const TimerHandle&);
         void stopTimer(const TimerHandle&);
         void removeTimer(const TimerHandle&);
+        bool isTimerActive(const TimerHandle&) const;
     };
 }

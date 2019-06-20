@@ -83,7 +83,8 @@ namespace TimerManager_n
             auto timer = std::find_if(timersList.begin(), timersList.end(), [&timerHandle](const Timer &tmr) { return tmr.getHandle() == timerHandle; });
 
             if (timer != timersList.end())
-                (*timer).start(currentTimeGetter());
+                if (!timer->isStarted())
+                    timer->start(currentTimeGetter());
         }
     }
 
@@ -94,7 +95,8 @@ namespace TimerManager_n
             auto timer = std::find_if(timersList.begin(), timersList.end(), [&timerHandle](const Timer &tmr) { return tmr.getHandle() == timerHandle; });
 
             if (timer != timersList.end())
-                (*timer).stop();
+                if (timer->isStarted())
+                    timer->stop();
         }
     }
 
@@ -107,5 +109,20 @@ namespace TimerManager_n
             if (timer != timersList.end())
                 timersList.erase(timer);
         }
+    }
+
+    bool TimerManager::isTimerActive(const TimerHandle &timerHandle) const
+    {
+        if (correctlyInitialized && (timerHandle != INVALID_TIMER_HANDLE))
+        {
+            auto timer = std::find_if(timersList.begin(), timersList.end(), [&timerHandle](const Timer &tmr) { return tmr.getHandle() == timerHandle; });
+
+            if (timer != timersList.end())
+                return timer->isStarted();
+            else
+                return false;
+        }
+        else
+            return false;
     }
 }
