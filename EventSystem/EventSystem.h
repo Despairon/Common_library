@@ -20,12 +20,13 @@ namespace EventSystem_n
     private:
         Subscriptions subscriptions;
         EventQueue    eventQueue;
+        EventId       eventId;
 
     public:
         EventSystem();
         ~EventSystem();
 
-        EventId createEvent() const;
+        EventId createEvent();
         void subscribe(const EventId&, EventSubscriber*);
         void unsubscribe(const EventId&, EventSubscriber*);
         void sendEvent(const Event&);

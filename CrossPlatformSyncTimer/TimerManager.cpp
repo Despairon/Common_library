@@ -88,6 +88,13 @@ namespace TimerManager_n
         }
     }
 
+    void TimerManager::restartTimer(const TimerHandle &timerHandle)
+    {
+        stopTimer(timerHandle);
+
+        startTimer(timerHandle);
+    }
+
     void TimerManager::stopTimer(const TimerHandle &timerHandle)
     {
         if (correctlyInitialized && (timerHandle != INVALID_TIMER_HANDLE))
@@ -124,5 +131,13 @@ namespace TimerManager_n
         }
         else
             return false;
+    }
+
+    void TimerManager::stopAllTimers()
+    {
+        if (correctlyInitialized && !timersList.empty())
+            for (auto timer = timersList.begin(); timer != timersList.end(); timer++)
+                if (timer->isStarted())
+                    stopTimer(timer->getHandle());
     }
 }

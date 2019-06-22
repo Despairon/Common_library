@@ -39,8 +39,10 @@ namespace TimerManager_n
 
         TimerHandle createTimer(const unsigned int&);
         void startTimer(const TimerHandle&);
+        void restartTimer(const TimerHandle&);
         void stopTimer(const TimerHandle&);
         void removeTimer(const TimerHandle&);
         bool isTimerActive(const TimerHandle&) const;
+        void stopAllTimers();
     };
 }

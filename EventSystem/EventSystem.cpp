@@ -12,10 +12,8 @@ namespace EventSystem_n
         terminate();
     }
 
-    EventId EventSystem::createEvent() const
+    EventId EventSystem::createEvent()
     {
-        static EventId eventId = 0;
-
         return eventId++;
     }
 
