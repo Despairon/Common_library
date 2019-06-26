@@ -232,7 +232,7 @@ namespace HttpMessage_n
                         _status.pop_back(); // remove trailing ' ' symbol (space)
                     }
                     else 
-                        return; // TODO: debug: "invalid HTTP message format";
+                        return;
                 }
             }
 
@@ -258,7 +258,7 @@ namespace HttpMessage_n
             }
 
             if (!_isValid)
-                return; // TODO: debug: "invalid HTTP message format";
+                return;
         }
         else
         {
