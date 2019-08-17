@@ -16,6 +16,7 @@ namespace TaskManager_n
         Priority priority;
     public:
         Task();
+		~Task();
 
         virtual void init() = 0;
         virtual void go() = 0;

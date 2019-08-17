@@ -36,7 +36,7 @@ namespace FSM
             transitions.clear();
         }
 
-        ~StateMachine() { }                                                                                                                 // destructor
+        virtual ~StateMachine() { }                                                                                                                 // destructor
 
         void addTransition(const StateType &state, const EventType &event, const StateType &nextState, StateMachineCallback action)         // add transition method
         {
